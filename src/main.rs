@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use phf::phf_map;
 
 const CRAB: &str = "🦀";
@@ -32,22 +34,59 @@ const CRAB_MAP: phf::Map<&'static str, u8> = phf_map! {
 
 fn main() {
     let input = String::from("rust is cool !");
-    println!("{}", encode(input));
+    println!("{}", encode(input.clone()));
+
+    println!("Decoding");
+    println!("{}", decode(input));
 }
 
 
 fn encode(input: String) -> String {
     let mut output = String::new();
     for c in input.chars() {
-        let c = c.to_lowercase().to_string();
-        match CRAB_MAP.get(&c[..]) {
+        match CRAB_MAP.get(&c.to_string()) {
             Some(n) => {
                 for _ in 0..*n {
                     output.push_str(CRAB);
                 }
             }
-            None => output.push_str(&c),
+            None => output.push_str(&c.to_string()),
         }
     }
     output
+}
+
+
+fn decode(input: String) -> String {
+
+    let decode_map = invert_crab_map();
+    let mut output = String::new();
+    let mut crab_count = 0;
+
+    for c in input.chars() {
+        match c {
+            '🦀' => crab_count += 1,
+            _ => {
+                match decode_map.get(&crab_count) {
+                    Some(n) => output.push_str(n),
+                    None => output.push_str(&c.to_string()),
+                }
+                crab_count = 0;
+            }
+        }
+    }
+
+    output
+
+}
+
+
+fn invert_crab_map() -> HashMap<u8, &'static str> {
+    let mut inverted_crab_map: HashMap<u8, &str> = HashMap::new();
+
+    for (k, v) in CRAB_MAP.entries() {
+        inverted_crab_map.insert(*v, *k);
+    } 
+
+    inverted_crab_map
 }
